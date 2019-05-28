@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head"></head>
+<body>
+<div class="container">
+    <div th:replace="fragments/header :: header"></div>
+    <div th:if="${not #lists.isEmpty(parts)}">
+        <div class="container">
+            <table class="table table-bordered table-hover horizontal-align">
+                <thead>
+                <tr>
+
+                    <th style="width: 65%">Title</th>
+                    <th style="width: 5%">Surely</th>
+                    <th style="width: 15%">Quantity</th>
+                    <th style="width: 5%">Edit</th>
+                    <th style="width: 5%">Delete</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="part : ${parts}">
+                    <td th:text="${part.title}">Title</td>
+                    <td style="text-align: center">
+                        <i th:if="${part.i_requared} == true" class="fa fa-plus-square-o" style="font-size:20px;color:#337ab7"></i>
+                        <i th:if="${part.i_requared} == false" class="fa fa-minus-square-o" style="font-size:20px;color:#337ab7"></i>
+                    </td>
+                    <td th:text="${part.quantity}" style="text-align: center">Quantity</td>
+
+                    <td style="text-align: center"><a th:href="@{'/edit/{id}'(id=${part.id})}"><i class="fa fa-edit" style="font-size:20px"></i></a></td>
+                    <td style="text-align: center"><a th:href="@{'/delete/{id}'(id=${part.id})}"><i class="fa fa-trash" style="font-size:20px"></i></a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="container">
+        <div th:if="${not #lists.isEmpty(parts)}">
+            <div class="container">
+                <tr style="..."  > Всего можно собрать:  <td th:text="${comps}"></td> <td> компьютеров </td>
+                </tr>
+                <nav aria-label="Page navigation">
+                    <div class="table-pagination">
+                        <ul class="pagination">
+                            <li th:class="${parts.number eq 0} ? 'disabled' : ''">
+                                <a th:if="${not parts.first}" th:href="@{${'/'}(page=${parts.number - 1},size=${parts.size})}">Previous</a>
+                                <a th:if="${parts.first}" href="javascript:void(0);">Previous</a>
+                            </li>
+
+                            <li th:each="pageNo : ${#numbers.sequence(0, parts.totalPages - 1)}" th:class="${parts.number eq pageNo}? 'active' : ''">
+                                <a th:if="${parts.number  eq pageNo}" href="javascript:void(0);">
+                                    <span th:text="${pageNo + 1}"></span>
+                                </a>
+                                <a th:if="${not (parts.number  eq pageNo)}" th:href="@{${'/'}(page=${pageNo},size=${parts.size})}">
+                                    <span th:text="${pageNo + 1}"></span>
+                                </a>
+
+                            </li>
+                            <li th:class="${parts.number + 1 ge parts.totalPages} ? 'disabled' : ''">
+                                <a th:if="${not parts.last}" th:href="@{${'/'}(page=${parts.number+1},size=${parts.size})}">Next</a>
+                                <a th:if="${parts.last}" href="javascript:void(0);">Next</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <tr style="..." >Текущая страница <td th:text="${parts.number + 1}"></td>
+                            <td>Всего страниц</td>
+                            <td th:text ="${parts.getTotalPages()}"></td>
+                        </tr >
+                    </div>
+
+                </nav>
+
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
