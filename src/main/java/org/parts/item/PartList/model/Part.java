@@ -13,16 +13,16 @@ public class Part {
     private String title;
     @Column(name = "quantity")
     private int quantity;
-    @Column(name = "i_requared")
-    private boolean i_requared;
+    @Column(name = "required")
+    private boolean required;
 
     public Part() {
     }
 
-    public Part(String title, int quantity, boolean i_requared) {
+    public Part(String title, int quantity, boolean required) {
         this.title = title;
         this.quantity = quantity;
-        this.i_requared = i_requared;
+        this.required = required;
     }
 
     public int getId() {
@@ -45,11 +45,11 @@ public class Part {
         this.quantity = quantity;
     }
 
-    public boolean isI_requared() {
-        return i_requared;
+    public boolean isRequired() {
+        return required;
     }
 
-    public void setI_requared(boolean finished) {
-        this.i_requared = finished;
+    public void setRequired(boolean finished) {
+        this.required = finished;
     }
 }

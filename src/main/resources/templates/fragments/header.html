@@ -6,9 +6,15 @@
     <nav class="navbar-default navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
-                <a class="navbar-brand" th:href="@{/}">PartList</a>
+                <a class="navbar-brand" th:href="@{/}">PartList(полный список)</a>
                 <ul class="nav navbar-nav">
                     <li><a href="#" th:href="@{/new}">New Part</a></li>
+                </ul>
+                <ul class="nav navbar-nav">
+                    <li><a href="#" th:href="@{/required}">Необходимые</a></li>
+                </ul>
+                <ul class="nav navbar-nav">
+                    <li><a href="#" th:href="@{/norequired}">Опциональные</a></li>
                 </ul>
             </div>
         </div>

@@ -2,7 +2,6 @@ package org.parts.item.PartList.controllers;
 
 import org.parts.item.PartList.model.Part;
 import org.parts.item.PartList.repository.PartRepository;
-import org.parts.item.PartList.service.PartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,39 +14,51 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-
 @Controller
 public class PartController {
 
     private final PartRepository repository;
 
-    private PartService service;
-
-
     @Autowired
     public PartController(PartRepository repository) {
         this.repository = repository;
-
-    }
-
-    @Autowired
-    public void setNoteService(PartService service) {
-        this.service = service;
     }
 
     @GetMapping("/")
-    public String list(Model model,
+    public String main(@RequestParam(required = false, defaultValue = "") String filter,
+                       Model model,
                        @PageableDefault(sort = {"title"}, direction = Sort.Direction.ASC)
-                               Pageable pageable) {
-        Page<Part> notebook = repository.findAllByOrderByTitleAsc(pageable);
+                               Pageable pageable){
+        getMainPage(filter, model, pageable);
+        return "index";
+    }
+
+    @GetMapping("/required")
+    public String getRequared(@RequestParam(required = false, defaultValue = "") String filter,
+                              Model model,
+                              @PageableDefault(sort = {"title"}, direction = Sort.Direction.ASC)
+                                      Pageable pageable){
+
+        Page<Part> page = repository.findByRequired(true,pageable);
+        model.addAttribute("sumComps",computersForAssembly());
+        model.addAttribute("url","/required");
+        model.addAttribute("parts", page);
+        model.addAttribute("filter",filter);
+        return "index";
+    }
 
 
-        model.addAttribute("parts", notebook);
+    @GetMapping("/norequired")
+    public String getNoRequared(@RequestParam(required = false, defaultValue = "") String filter,
+                                Model model,
+                                @PageableDefault(sort = {"id"}, direction = Sort.Direction.ASC)
+                                        Pageable pageable){
 
-
-        model.addAttribute("comps", computersForAssembly());
-
+        Page<Part> page = repository.findByRequired(false,pageable);
+        model.addAttribute("sumComps",computersForAssembly());
+        model.addAttribute("url","/norequired");
+        model.addAttribute("parts", page);
+        model.addAttribute("filter",filter);
         return "index";
     }
 
@@ -60,50 +71,71 @@ public class PartController {
     }
 
     @PostMapping("/update")
-    public String updateNote(@RequestParam Integer id,
-                             @RequestParam(value = "title", required = false, defaultValue = "???") String title,
+    public String updateNote(@RequestParam ("id")Part updateItem,
+                             @RequestParam(value = "title") String title,
                              @RequestParam(value = "quantity", required = false, defaultValue = "0") Integer quantity,
-                             @RequestParam(value = "i_requared", required = false) boolean i_requared) {
-        service.updateNote(id, title, quantity, i_requared);
+                             @RequestParam(value = "required", required = false) boolean i_requared) {
+
+        updateItem.setTitle(title);
+        updateItem.setQuantity(quantity);
+        updateItem.setRequired(i_requared);
+        repository.save(updateItem);
         return "redirect:/";
     }
 
     @GetMapping("/new")
-    public String newNote() {
+    public String newPart() {
         return "operations/new";
     }
 
     @PostMapping("/save")
     public String saveNote(@RequestParam(value = "title", required = false, defaultValue = "???") String title,
                            @RequestParam(value = "quantity", required = false, defaultValue = "0") Integer quantity,
-                           @RequestParam(value = "i_requared", required = false) boolean i_requared) {
-        service.saveNote(new Part(title, quantity, i_requared));
+                           @RequestParam(value = "required", required = false) boolean i_required) {
+        repository.save(new Part(title, quantity, i_required));
         return "redirect:/";
     }
 
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Integer id) {
-        service.deleteNote(id);
+        repository.delete(id);
         return "redirect:/";
     }
 
 
     private int computersForAssembly() {
-        int quantity = -1;
-
-        List<Part> onlyNecessaryParts = repository.findAll();
-        for (Part item : onlyNecessaryParts) {
-            if (item.isI_requared() && quantity == -1) {
+        if(repository.findByRequiredIsTrue().size() == 0){
+            return 0;
+        }
+        int quantity = repository.findByRequiredIsTrue().get(0).getQuantity();
+        for  (Part item: repository.findByRequiredIsTrue()){
+            if(item.getQuantity()< quantity){
                 quantity = item.getQuantity();
             }
-            if (quantity > -1 && item.isI_requared()) {
-                if (quantity > item.getQuantity()) {
-                    quantity = item.getQuantity();
-                }
-            }
         }
-
-        if (quantity == -1) return 0;
         return quantity;
     }
+
+    private void getMainPage(@RequestParam(required = false, defaultValue = "") String filter,
+                             Model model, @PageableDefault(sort = {"title"}, direction = Sort.Direction.ASC)
+                                     Pageable pageable) {
+        Page<Part> page = getPartList(filter, pageable) ;
+        model.addAttribute("sumComps",computersForAssembly());
+        model.addAttribute("url", "/");
+        model.addAttribute("parts", page);
+        model.addAttribute("filter",filter);
+    }
+
+    private Page<Part> getPartList(@RequestParam(required = false, defaultValue = "") String filter,
+                                        @PageableDefault(sort = {"title"}, direction = Sort.Direction.ASC)
+                                                Pageable pageable) {
+        Page<Part> parts ;
+        if(filter != null && !filter.isEmpty()) {
+            parts = repository.findAllByTitleIsContainingIgnoreCase(filter, pageable);
+        }else {
+            parts = repository.findAll(pageable);
+        }
+        return parts;
+    }
+
 }
