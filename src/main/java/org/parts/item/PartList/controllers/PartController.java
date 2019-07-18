@@ -2,6 +2,7 @@ package org.parts.item.PartList.controllers;
 
 import org.parts.item.PartList.model.Part;
 import org.parts.item.PartList.repository.PartRepository;
+import org.parts.item.PartList.service.PartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +20,12 @@ public class PartController {
 
     private final PartRepository repository;
 
+    private final PartService service;
+
     @Autowired
-    public PartController(PartRepository repository) {
+    public PartController(PartRepository repository, PartService service) {
         this.repository = repository;
+        this.service = service;
     }
 
     @GetMapping("/")
@@ -40,7 +44,7 @@ public class PartController {
                                       Pageable pageable){
 
         Page<Part> page = repository.findByRequired(true,pageable);
-        model.addAttribute("sumComps",computersForAssembly());
+        model.addAttribute("sumComps",service.computersForAssembly());
         model.addAttribute("url","/required");
         model.addAttribute("parts", page);
         model.addAttribute("filter",filter);
@@ -55,7 +59,7 @@ public class PartController {
                                         Pageable pageable){
 
         Page<Part> page = repository.findByRequired(false,pageable);
-        model.addAttribute("sumComps",computersForAssembly());
+        model.addAttribute("sumComps",service.computersForAssembly());
         model.addAttribute("url","/norequired");
         model.addAttribute("parts", page);
         model.addAttribute("filter",filter);
@@ -103,24 +107,11 @@ public class PartController {
     }
 
 
-    private int computersForAssembly() {
-        if(repository.findByRequiredIsTrue().size() == 0){
-            return 0;
-        }
-        int quantity = repository.findByRequiredIsTrue().get(0).getQuantity();
-        for  (Part item: repository.findByRequiredIsTrue()){
-            if(item.getQuantity()< quantity){
-                quantity = item.getQuantity();
-            }
-        }
-        return quantity;
-    }
-
     private void getMainPage(@RequestParam(required = false, defaultValue = "") String filter,
                              Model model, @PageableDefault(sort = {"title"}, direction = Sort.Direction.ASC)
                                      Pageable pageable) {
         Page<Part> page = getPartList(filter, pageable) ;
-        model.addAttribute("sumComps",computersForAssembly());
+        model.addAttribute("sumComps",service.computersForAssembly());
         model.addAttribute("url", "/");
         model.addAttribute("parts", page);
         model.addAttribute("filter",filter);
